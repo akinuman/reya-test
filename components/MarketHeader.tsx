@@ -8,13 +8,21 @@ interface MarketHeaderProps {
   currentPrice: number | null;
   priceChange24h: number | null;
   volume24h: string | null;
-  oiQty: string | null;
+  longOiQty: string | null;
+  shortOiQty: string | null;
   fundingRate: string | null;
   timeframe: Timeframe;
   onTimeframeChange: (tf: Timeframe) => void;
   onSymbolChange: (symbol: string) => void;
   availableSymbols: string[];
   connectionState: string;
+}
+
+function formatDollarCompact(value: number): string {
+  if (value >= 1_000_000_000) return `$${(value / 1_000_000_000).toFixed(2)}B`;
+  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(2)}M`;
+  if (value >= 1_000) return `$${(value / 1_000).toFixed(2)}K`;
+  return `$${value.toFixed(2)}`;
 }
 
 const TIMEFRAMES: Timeframe[] = ["1m", "5m", "15m", "1h", "1d"];
@@ -41,7 +49,34 @@ function formatVolume(vol: string | null): string {
 function formatFundingRate(rate: string | null): string {
   if (!rate) return "---";
   const n = parseFloat(rate);
-  return `${(n * 100).toFixed(4)}%`;
+  // Reya displays the raw decimal with a % suffix (0.002846 → "0.0028%")
+  return `${n.toFixed(4)}%`;
+}
+
+function formatPriceChange(
+  change: number | null,
+  currentPrice: number | null,
+): string {
+  if (change === null || currentPrice === null) return "---";
+  // pxChange24h is the absolute USD delta; compute percentage
+  const prevPrice = currentPrice - change;
+  if (prevPrice === 0) return "0.00%";
+  const pct = (change / prevPrice) * 100;
+  return `${pct >= 0 ? "" : ""}${pct.toFixed(2)}%`;
+}
+
+function formatOpenInterest(
+  longOiQty: string | null,
+  shortOiQty: string | null,
+  currentPrice: number | null,
+): string {
+  if (!longOiQty && !shortOiQty) return "---";
+  // Reya shows total notional = (long + short) × price
+  const longQty = longOiQty ? parseFloat(longOiQty) : 0;
+  const shortQty = shortOiQty ? parseFloat(shortOiQty) : 0;
+  const totalQty = longQty + shortQty;
+  if (currentPrice === null) return totalQty.toFixed(2);
+  return formatDollarCompact(totalQty * currentPrice);
 }
 
 function formatSymbolDisplay(symbol: string): string {
@@ -53,7 +88,8 @@ export default function MarketHeader({
   currentPrice,
   priceChange24h,
   volume24h,
-  oiQty,
+  longOiQty,
+  shortOiQty,
   fundingRate,
   timeframe,
   onTimeframeChange,
@@ -109,9 +145,7 @@ export default function MarketHeader({
           <div className="stat">
             <span className="stat-label">24h Change</span>
             <span className="stat-value" style={{ color: changeColor }}>
-              {priceChange24h !== null
-                ? `${isPositiveChange ? "+" : ""}${priceChange24h.toFixed(2)}`
-                : "---"}
+              {formatPriceChange(priceChange24h, currentPrice)}
             </span>
           </div>
           <div className="stat">
@@ -121,7 +155,7 @@ export default function MarketHeader({
           <div className="stat">
             <span className="stat-label">Open Interest</span>
             <span className="stat-value">
-              {oiQty ? parseFloat(oiQty).toFixed(2) : "---"}
+              {formatOpenInterest(longOiQty, shortOiQty, currentPrice)}
             </span>
           </div>
           <div className="stat">

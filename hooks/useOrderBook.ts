@@ -36,7 +36,7 @@ export function useOrderBook({
     // Flag reset — will be applied on the next incoming message
     needsResetRef.current = true;
 
-    const unsub = subscribe(
+    const unSubscribe = subscribe(
       `/v2/market/${symbol}/depth`,
       (msg: WSChannelMessage) => {
         needsResetRef.current = false;
@@ -61,7 +61,7 @@ export function useOrderBook({
     );
 
     return () => {
-      unsub();
+      unSubscribe();
       // Reset state immediately on cleanup (symbol changed or unmount)
       setState(INITIAL_STATE);
     };

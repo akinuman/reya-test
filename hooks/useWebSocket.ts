@@ -36,6 +36,7 @@ export function useWebSocket() {
     queueMicrotask(() => {
       if (mountedRef.current) setConnectionState("connecting");
     });
+
     const ws = new WebSocket(WS_URL);
     wsRef.current = ws;
 
@@ -100,6 +101,7 @@ export function useWebSocket() {
       if (!handlersRef.current.has(channel)) {
         handlersRef.current.set(channel, new Set());
       }
+
       handlersRef.current.get(channel)!.add(handler);
 
       // Send subscribe if already connected

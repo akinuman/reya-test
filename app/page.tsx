@@ -38,7 +38,8 @@ export default function TradingPage() {
         currentPrice={marketData.currentPrice}
         priceChange24h={marketData.priceChange24h}
         volume24h={marketData.volume24h}
-        oiQty={marketData.oiQty}
+        longOiQty={marketData.longOiQty}
+        shortOiQty={marketData.shortOiQty}
         fundingRate={marketData.fundingRate}
         timeframe={timeframe}
         onTimeframeChange={setTimeframe}

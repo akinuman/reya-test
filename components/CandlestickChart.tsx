@@ -127,6 +127,7 @@ export default function CandlestickChart({
         chart.applyOptions({ width, height });
       }
     });
+
     resizeObserver.observe(containerRef.current);
 
     return () => {

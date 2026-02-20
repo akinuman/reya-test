@@ -24,7 +24,8 @@ interface MarketDataState {
   currentPrice: number | null;
   priceChange24h: number | null;
   volume24h: string | null;
-  oiQty: string | null;
+  longOiQty: string | null;
+  shortOiQty: string | null;
   fundingRate: string | null;
   oraclePrice: string | null;
   poolPrice: string | null;
@@ -44,7 +45,8 @@ export function useMarketData({
     currentPrice: null,
     priceChange24h: null,
     volume24h: null,
-    oiQty: null,
+    longOiQty: null,
+    shortOiQty: null,
     fundingRate: null,
     oraclePrice: null,
     poolPrice: null,
@@ -186,48 +188,51 @@ export function useMarketData({
 
   // Subscribe to price data
   useEffect(() => {
-    const unsub = subscribe(`/v2/prices/${symbol}`, (msg: WSChannelMessage) => {
-      const data = msg.data as Price;
-      const price = parseFloat(data.oraclePrice);
-      if (isNaN(price)) return;
+    const unSubscribe = subscribe(
+      `/v2/prices/${symbol}`,
+      (msg: WSChannelMessage) => {
+        const data = msg.data as Price;
+        const price = parseFloat(data.oraclePrice);
+        if (isNaN(price)) return;
 
-      const candleTime = getCandleTime(data.updatedAt);
-      const existing = candlesRef.current.get(candleTime);
+        const candleTime = getCandleTime(data.updatedAt);
+        const existing = candlesRef.current.get(candleTime);
 
-      if (existing) {
-        existing.high = Math.max(existing.high, price);
-        existing.low = Math.min(existing.low, price);
-        existing.close = price;
-      } else {
-        candlesRef.current.set(candleTime, {
-          time: candleTime,
-          open: price,
-          high: price,
-          low: price,
-          close: price,
-          volume: 0,
-        });
-      }
+        if (existing) {
+          existing.high = Math.max(existing.high, price);
+          existing.low = Math.min(existing.low, price);
+          existing.close = price;
+        } else {
+          candlesRef.current.set(candleTime, {
+            time: candleTime,
+            open: price,
+            high: price,
+            low: price,
+            close: price,
+            volume: 0,
+          });
+        }
 
-      const candles = Array.from(candlesRef.current.values()).sort(
-        (a, b) => a.time - b.time,
-      );
+        const candles = Array.from(candlesRef.current.values()).sort(
+          (a, b) => a.time - b.time,
+        );
 
-      setState((prev) => ({
-        ...prev,
-        currentPrice: price,
-        oraclePrice: data.oraclePrice,
-        poolPrice: data.poolPrice ?? null,
-        candles,
-      }));
-    });
+        setState((prev) => ({
+          ...prev,
+          currentPrice: price,
+          oraclePrice: data.oraclePrice,
+          poolPrice: data.poolPrice ?? null,
+          candles,
+        }));
+      },
+    );
 
-    return unsub;
+    return unSubscribe;
   }, [symbol, subscribe, getCandleTime]);
 
   // Subscribe to market summary
   useEffect(() => {
-    const unsub = subscribe(
+    const unSubscribe = subscribe(
       `/v2/market/${symbol}/summary`,
       (msg: WSChannelMessage) => {
         const data = msg.data as MarketSummary;
@@ -237,13 +242,14 @@ export function useMarketData({
             ? parseFloat(data.pxChange24h)
             : null,
           volume24h: data.volume24h,
-          oiQty: data.oiQty,
+          longOiQty: data.longOiQty,
+          shortOiQty: data.shortOiQty,
           fundingRate: data.fundingRate,
         }));
       },
     );
 
-    return unsub;
+    return unSubscribe;
   }, [symbol, subscribe]);
 
   return { ...state, loadMoreCandles, hasMoreHistory };

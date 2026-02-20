@@ -20,7 +20,7 @@ export function useTrades({ symbol, subscribe }: UseTradesParams) {
   useEffect(() => {
     tradesRef.current = [];
 
-    const unsub = subscribe(
+    const unSubscribe = subscribe(
       `/v2/market/${symbol}/perpExecutions`,
       (msg: WSChannelMessage) => {
         const data = msg.data as PerpExecution[];
@@ -33,7 +33,7 @@ export function useTrades({ symbol, subscribe }: UseTradesParams) {
     );
 
     return () => {
-      unsub();
+      unSubscribe();
       // Clear trades on symbol change or unmount
       tradesRef.current = [];
       setTrades([]);
