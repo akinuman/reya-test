@@ -176,8 +176,11 @@ export default function CandlestickChart({
       volumeSeriesRef.current.setData(volumeData);
 
       if (prevDataLenRef.current === 0 && candles.length > 0) {
-        // First load: fit all content
-        timeScale?.fitContent();
+        // First load: scroll so the latest candle is at the right edge,
+        // keeping the configured barSpacing (8px) intact.
+        // scrollToPosition(offset, animated) — offset is number of bars
+        // from the right edge. Negative = scroll right.
+        timeScale?.scrollToPosition(50, false);
       } else if (visibleRange && prevDataLenRef.current > 0) {
         // Data prepended (infinite scroll): adjust range to keep same candles visible
         const addedCount = candles.length - prevDataLenRef.current;
