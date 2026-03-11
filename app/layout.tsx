@@ -8,9 +8,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Reya Chart — Real-time DEX Trading",
-  description:
-    "Real-time candlestick charts and trading data powered by Reya Network WebSocket API",
+  title: "Bullet Perp Trading",
+  description: "Real-time powered by Bullet Network WebSocket API",
 };
 
 export default function RootLayout({

@@ -25,11 +25,11 @@ export default function TradingPage() {
   const [symbol, setSymbol] = useState(DEFAULT_SYMBOL);
   const [timeframe, setTimeframe] = useState<Timeframe>("1m");
 
-  const { connectionState, subscribe } = useWebSocket();
+  const { connectionState, subscribe, subscribeError } = useWebSocket();
 
   const marketData = useMarketData({ symbol, timeframe, subscribe });
   const trades = useTrades({ symbol, subscribe });
-  const orderBook = useOrderBook({ symbol, subscribe });
+  const orderBook = useOrderBook({ symbol, subscribe, subscribeError });
 
   return (
     <div className="trading-app">
@@ -63,6 +63,8 @@ export default function TradingPage() {
             asks={orderBook.asks}
             spread={orderBook.spread}
             spreadPercent={orderBook.spreadPercent}
+            status={orderBook.status}
+            errorMessage={orderBook.errorMessage}
           />
         </div>
       </div>

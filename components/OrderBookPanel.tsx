@@ -8,6 +8,8 @@ interface OrderBookPanelProps {
   asks: DepthLevel[];
   spread: number | null;
   spreadPercent: number | null;
+  status: "loading" | "live" | "unsupported";
+  errorMessage?: string | null;
 }
 
 function formatOBPrice(price: string): string {
@@ -26,7 +28,24 @@ export default function OrderBookPanel({
   asks,
   spread,
   spreadPercent,
+  status,
+  errorMessage,
 }: OrderBookPanelProps) {
+  if (status === "unsupported") {
+    return (
+      <div className="orderbook-panel">
+        <div className="panel-header">
+          <h3>Order Book</h3>
+        </div>
+        <div className="panel-empty">
+          {errorMessage?.includes("snapshot")
+            ? "Order book not available for this market."
+            : "Order book feed unavailable right now."}
+        </div>
+      </div>
+    );
+  }
+
   // Compute max qty for bar widths
   const allLevels = [...bids, ...asks];
   const maxQty = allLevels.reduce(
@@ -46,7 +65,9 @@ export default function OrderBookPanel({
 
       {/* Asks (reversed so lowest ask is nearest to spread) */}
       <div className="ob-asks">
-        {asks.length === 0 ? (
+        {status === "loading" ? (
+          <div className="panel-empty">Loading order book...</div>
+        ) : asks.length === 0 ? (
           <div className="panel-empty">No asks</div>
         ) : (
           [...asks].reverse().map((level, i) => {
@@ -79,7 +100,9 @@ export default function OrderBookPanel({
 
       {/* Bids */}
       <div className="ob-bids">
-        {bids.length === 0 ? (
+        {status === "loading" ? (
+          <div className="panel-empty">Loading order book...</div>
+        ) : bids.length === 0 ? (
           <div className="panel-empty">No bids</div>
         ) : (
           bids.map((level, i) => {

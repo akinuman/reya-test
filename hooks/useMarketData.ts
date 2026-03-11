@@ -192,7 +192,10 @@ export function useMarketData({
       `/v2/prices/${symbol}`,
       (msg: WSChannelMessage) => {
         const data = msg.data as Price;
-        const price = parseFloat(data.oraclePrice);
+        // Price chart should prefer tradable pool price when available.
+        // Fallback to oracle price so candles still update if pool is missing.
+        const priceSource = data.poolPrice ?? data.oraclePrice;
+        const price = parseFloat(priceSource);
         if (isNaN(price)) return;
 
         const candleTime = getCandleTime(data.updatedAt);
